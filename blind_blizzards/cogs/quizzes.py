@@ -44,7 +44,8 @@ class Quizzes(commands.Cog):
         """Take a quiz. If none specified, one will be chosen at random"""
         # if no quiz specified, pick a random one
         if not quiz_name:
-            quiz_name = random.choice(self.quizzes_by_name.keys())
+            # random.choice doesn't like dict_keys
+            quiz_name = random.choice([i for i in self.quizzes_by_name])
 
         # find the closest match, no matter what it is and strip the accuracy
         quiz_name = process.extractOne(quiz_name, self.quizzes_by_name.keys())[0]
