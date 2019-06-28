@@ -36,23 +36,8 @@ def get_check(
     def check(reaction: discord.Reaction, user: discord.User):
         valid_emoji = reaction.emoji in OPTION_EMOJI + [CANCEL_QUIZ]
         valid_user = user == ctx.author
-        valid_message = reaction.message == msg
-        print(valid_emoji, valid_user, valid_message)
-        if not valid_emoji:
-            print(
-                reaction.emoji,
-                OPTION_EMOJI + [CANCEL_QUIZ],
-                reaction.emoji in OPTION_EMOJI + [CANCEL_QUIZ],
-            )
-        if not valid_user:
-            print(user, ctx.author, user == ctx.author, user.id == ctx.author.id)
-        if not valid_message:
-            print(
-                reaction.message,
-                msg,
-                reaction.message == msg,
-                reaction.message.id == msg.id,
-            )
+        # for some reason these aren't equating properly
+        valid_message = reaction.message.id == msg.id
         return all([valid_emoji, valid_user, valid_message])
 
     return check
