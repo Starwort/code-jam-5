@@ -24,5 +24,8 @@ var/
 .installed.cfg
 *.egg
 
+#V isual Studio Code
+.vscode
+
 # Our configuration files
 config.py
