@@ -5,7 +5,7 @@ from discord.ext import commands
 import discord
 
 # quiz data
-from .data import quizzes
+from .data import interactive
 
 # reload quiz data
 from importlib import reload
@@ -26,18 +26,18 @@ class Quizzes(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         # a list of quiz/test titles to their quizzes/tests
-        self.quizzes_by_name = {quiz.title: quiz for quiz in quizzes.quizzes}
-        self.tests_by_name = {test.title: test for test in quizzes.tests}
+        self.quizzes_by_name = {quiz.title: quiz for quiz in interactive.quizzes}
+        self.tests_by_name = {test.title: test for test in interactive.tests}
 
     @commands.command()
     @_check()
     async def reload_quizzes(self, ctx: commands.Context):
         """Reloads the list of available quizzes"""
         # reload cogs.data.quizzes
-        reload(quizzes)
+        reload(interactive)
         # construct quizzes_by_name/tests_by_name again
-        self.quizzes_by_name = {quiz.title: quiz for quiz in quizzes.quizzes}
-        self.tests_by_name = {test.title: test for test in quizzes.tests}
+        self.quizzes_by_name = {quiz.title: quiz for quiz in interactive.quizzes}
+        self.tests_by_name = {test.title: test for test in interactive.tests}
         # send back a nice little message
         await ctx.send(
             f"Reloaded {len(self.quizzes_by_name)} quizzes and {len(self.tests_by_name)} tests"
