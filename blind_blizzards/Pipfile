@@ -12,6 +12,7 @@ discord-py = "*"
 jishaku = {git = "https://github.com/Starwort/jishaku",ref = "master"}
 pylint = "*"
 black = "==19.3b0"
+fuzzywuzzy = "*"
 
 [requires]
 python_version = "3.7"
