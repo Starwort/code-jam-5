@@ -75,6 +75,7 @@ class QuizQuestion:
 
     async def prepare_question_with_embed(
         self,
+        quiz_name: str,
         question: int,
         max_question: int,
         colour: typing.Union[discord.Colour, int] = MAGIC_EMBED_COLOUR,
@@ -86,7 +87,9 @@ class QuizQuestion:
 
         # make a basic embed, honouring the customisation settings
         embed = discord.Embed(
-            colour=colour, title=f"Question {question}/{max_question}", description=text
+            colour=colour,
+            title=f"{quiz_name} - question {question} of {max_question}",
+            description=text,
         )
 
         # for each option, add a field
@@ -150,7 +153,7 @@ class Quiz:
         for number, question in enumerate(quiz_questions, 1):
             # retrieve the question data
             embed, answer = await question.prepare_question_with_embed(
-                number, max_question, self.colour
+                self.title, number, max_question, self.colour
             )
 
             # ask the question
