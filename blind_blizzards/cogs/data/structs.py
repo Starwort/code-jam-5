@@ -46,13 +46,18 @@ class QuizQuestion:
     """Structure used for holding multiple-choice quiz questions"""
 
     def __init__(
-        self, question_text: str, options: typing.List[str], correct_option_index: int
+        self,
+        question_text: str,
+        options: typing.Tuple[str, str, str, str, str],
+        correct_option_index: int,
     ):
         self.text: str = question_text
-        self.options: typing.List[str] = options
+        self.options: typing.Tuple[str, str, str, str, str] = options
         self.correct: int = correct_option_index
 
-    async def prepare_question(self) -> typing.Tuple[str, typing.List[str], int]:
+    async def prepare_question(
+        self
+    ) -> typing.Tuple[str, typing.Tuple[str, str, str, str, str], int]:
         """Called when generating a question during a quiz"""
         # copy self.options and add index items
         options = [[index, item] for index, item in enumerate(self.options)]
