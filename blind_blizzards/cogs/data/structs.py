@@ -139,7 +139,7 @@ class Quiz:
         score = 0
         max_question = len(quiz_questions)
         # initialise the message
-        msg: discord.Message = await ctx.send(text="Loading quiz...")
+        msg: discord.Message = await ctx.send("Loading quiz...")
         # add option reactions
         for emoji in OPTION_EMOJI:
             await msg.add_reaction(emoji)
