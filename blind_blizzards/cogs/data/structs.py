@@ -251,20 +251,20 @@ class AlignmentQuestion:
         self,
         question_text: str,
         options: typing.Tuple[
-            typing.Tuple[str, int, int],
-            typing.Tuple[str, int, int],
-            typing.Tuple[str, int, int],
-            typing.Tuple[str, int, int],
-            typing.Tuple[str, int, int],
+            typing.Tuple[str, AlignmentField, int],
+            typing.Tuple[str, AlignmentField, int],
+            typing.Tuple[str, AlignmentField, int],
+            typing.Tuple[str, AlignmentField, int],
+            typing.Tuple[str, AlignmentField, int],
         ],
     ):
         self.text: str = question_text
         self.options: typing.Tuple[
-            typing.Tuple[str, int, int],
-            typing.Tuple[str, int, int],
-            typing.Tuple[str, int, int],
-            typing.Tuple[str, int, int],
-            typing.Tuple[str, int, int],
+            typing.Tuple[str, AlignmentField, int],
+            typing.Tuple[str, AlignmentField, int],
+            typing.Tuple[str, AlignmentField, int],
+            typing.Tuple[str, AlignmentField, int],
+            typing.Tuple[str, AlignmentField, int],
         ] = options
 
     async def prepare_question(
@@ -272,11 +272,11 @@ class AlignmentQuestion:
     ) -> typing.Tuple[
         str,
         typing.Tuple[
-            typing.Tuple[str, int, int],
-            typing.Tuple[str, int, int],
-            typing.Tuple[str, int, int],
-            typing.Tuple[str, int, int],
-            typing.Tuple[str, int, int],
+            typing.Tuple[str, AlignmentField, int],
+            typing.Tuple[str, AlignmentField, int],
+            typing.Tuple[str, AlignmentField, int],
+            typing.Tuple[str, AlignmentField, int],
+            typing.Tuple[str, AlignmentField, int],
         ],
     ]:
         """Called when generating a question during an alignment test"""
@@ -329,6 +329,7 @@ class AlignmentTest:
         # This should be symmetric i.e. all scores within 0 ± max_y_displacement
         max_y_displacement: int,
         colour: typing.Union[discord.Colour, int] = MAGIC_EMBED_COLOUR,
+        as_images: bool = False,
     ):
         self.title: str = title
         self.questions: typing.List[AlignmentQuestion] = questions
@@ -336,6 +337,7 @@ class AlignmentTest:
         self.x = max_x_displacement
         self.y = max_y_displacement
         self.colour = colour
+        self.images = as_images
 
     def add_questions(self, *questions: AlignmentQuestion):
         """Used to add additional questions after an AlignmentTest has been created"""
@@ -400,7 +402,13 @@ class AlignmentTest:
         alignment = self.alignment_table[floor(value_map(y, -self.y, self.y, -1, 2))][
             floor(value_map(x, -self.x, self.x, -1, 2))
         ]
-        await msg.edit(
-            content=f"Alignment for {ctx.author.nick or ctx.author.name}: {alignment}",
-            embed=get_alignment_embed(colour=self.colour),
-        )
+        user = ctx.author.nick or ctx.author.name
+        if not self.images:
+            await msg.edit(
+                content=f"Alignment for {user}: {alignment}",
+                embed=get_alignment_embed(colour=self.colour),
+            )
+        else:
+            embed = discord.Embed(colour=self.colour)
+            embed.set_image(url=alignment)
+            await msg.edit(content=f"Alignment for {user}:", embed=embed)
