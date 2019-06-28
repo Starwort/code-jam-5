@@ -399,9 +399,9 @@ class AlignmentTest:
                 y += answer[1]
 
         # at the end of the quiz
-        alignment = self.alignment_table[floor(value_map(y, -self.y, self.y, -1, 2))][
-            floor(value_map(x, -self.x, self.x, -1, 2))
-        ]
+        alignment = self.alignment_table[
+            floor(value_map(y, -self.y, self.y + 1, 0, 3))
+        ][floor(value_map(x, -self.x, self.x + 1, 0, 3))]
         user = ctx.author.nick or ctx.author.name
         if not self.images:
             await msg.edit(
