@@ -5,11 +5,13 @@ verify_ssl = true
 
 [dev-packages]
 flake8 = "*"
-black = "*"
+black = "==19.3b0"
 
 [packages]
 discord-py = "*"
 jishaku = {git = "https://github.com/Starwort/jishaku",ref = "master"}
+pylint = "*"
+black = "==19.3b0"
 
 [requires]
 python_version = "3.7"
