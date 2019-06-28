@@ -1,7 +1,10 @@
 from structs import Quiz, QuizQuestion
 
-example_quiz = Quiz("An example quiz to demonstrate how they work", [])
 
+quizzes = []
+
+
+example_quiz = Quiz("An example quiz to demonstrate how they work", [])
 example_quiz.add_questions(
     [
         QuizQuestion(
@@ -39,3 +42,7 @@ example_quiz.add_questions(
         ),
     ]
 )
+
+# if we wanted this to be a real quiz
+# we'd uncomment this line:
+# quizzes.append(example_quiz)
