@@ -2,6 +2,50 @@ import typing
 from random import shuffle
 from discord.ext import commands
 import discord
+import enum
+from math import floor
+
+
+class AlignmentField(enum.Enum):
+    # for standard alignment, X = lawful/chaotic
+    X = 0
+    # Y = good/evil
+    Y = 1
+    # If an answer does not shift one's alignment
+    NONE = None
+
+
+Number = typing.Union[int, float]
+
+
+def value_map(
+    unmapped: Number,
+    min_start: Number,
+    max_start: Number,
+    min_end: Number,
+    max_end: Number,
+) -> float:
+    """Takes a number between `min_start` and `max_start` (not enforced)
+    and places it at an equivalent place between `min_end` and `max_end`
+    e.g. `value_map(1, 0, 2, 4, 8)` -> 6.0"""
+    # start by normalising the range
+    value = unmapped - min_start
+    original_width = max_start - min_start
+
+    # now find the width of the target range
+    target_width = max_end - min_end
+
+    # multiply by target width and then divide by original width
+    # this order preserves more precision without using a decimal.Decimal
+    value *= target_width
+    value /= original_width
+
+    # finally, put it back in the desired range by adding the minimum
+    value += min_end
+
+    # return the mapped value
+    return value
+
 
 OPTION_EMOJI = ["🇦", "🇧", "🇨", "🇩", "🇪"]
 EMOJI_TO_INT = {emoji: index for index, emoji in enumerate(OPTION_EMOJI)}
@@ -20,11 +64,29 @@ def get_cancelled_embed(
     )
 
 
+def alignment_cancelled_embed(
+    colour: typing.Union[discord.Colour, int] = MAGIC_EMBED_COLOUR
+) -> discord.Embed:
+    return discord.Embed(
+        colour=colour,
+        title="Cancelled Alignment Test",
+        description=f"Ended the test prematurely.\n*You'll never know...*",
+    )
+
+
 def get_finished_embed(
     colour: typing.Union[discord.Colour, int] = MAGIC_EMBED_COLOUR
 ) -> discord.Embed:
     return discord.Embed(
         colour=colour, title="Finished Quiz", description=f"The quiz is over."
+    )
+
+
+def get_alignment_embed(
+    colour: typing.Union[discord.Colour, int] = MAGIC_EMBED_COLOUR
+) -> discord.Embed:
+    return discord.Embed(
+        colour=colour, title="Finished Alignment Test", description=f"The test is over."
     )
 
 
@@ -179,4 +241,166 @@ class Quiz:
         await msg.edit(
             content=f"Final score for {ctx.author.nick or ctx.author.name}: {score}",
             embed=get_finished_embed(colour=self.colour),
+        )
+
+
+class AlignmentQuestion:
+    """Structure used for holding multiple-choice alignment test questions"""
+
+    def __init__(
+        self,
+        question_text: str,
+        options: typing.Tuple[
+            typing.Tuple[str, int, int],
+            typing.Tuple[str, int, int],
+            typing.Tuple[str, int, int],
+            typing.Tuple[str, int, int],
+            typing.Tuple[str, int, int],
+        ],
+    ):
+        self.text: str = question_text
+        self.options: typing.Tuple[
+            typing.Tuple[str, int, int],
+            typing.Tuple[str, int, int],
+            typing.Tuple[str, int, int],
+            typing.Tuple[str, int, int],
+            typing.Tuple[str, int, int],
+        ] = options
+
+    async def prepare_question(
+        self
+    ) -> typing.Tuple[
+        str,
+        typing.Tuple[
+            typing.Tuple[str, int, int],
+            typing.Tuple[str, int, int],
+            typing.Tuple[str, int, int],
+            typing.Tuple[str, int, int],
+            typing.Tuple[str, int, int],
+        ],
+    ]:
+        """Called when generating a question during an alignment test"""
+        # copy self.options
+        options = self.options.copy()
+        # shuffle it the mathematically best number of times
+        for _ in range(7):
+            shuffle(options)
+        # return the question and shuffled options
+        return self.text, options
+
+    async def prepare_question_with_embed(
+        self, colour: typing.Union[discord.Colour, int] = MAGIC_EMBED_COLOUR
+    ) -> typing.Tuple[discord.Embed, int]:
+        """Called immediately before display during a quiz, for formatting.
+        Quizzes can customise the colour of the embed using the `colour` parameter"""
+        # get question data
+        text, options = await self.prepare_question()
+
+        # make a basic embed, honouring the customisation settings
+        embed = discord.Embed(colour=colour, description=text)
+
+        # for each option, add a field
+        for emoji, option in zip(OPTION_EMOJI, options):
+            embed.add_field(name=emoji, value=option[0])
+
+        # tell the user what's going on
+        embed.set_footer(
+            text=f"React with your choice to answer, or with {CANCEL_QUIZ} to end:"
+        )
+
+        # return the embed and alignment data
+        return embed, [option[1:] for option in options]
+
+
+class AlignmentTest:
+    """Structure used for holding multiple choice alignment tests"""
+
+    def __init__(
+        self,
+        title: str,
+        questions: typing.List[AlignmentQuestion],
+        alignment_table: typing.Tuple[
+            typing.Tuple[str, str, str],
+            typing.Tuple[str, str, str],
+            typing.Tuple[str, str, str],
+        ],
+        # This should be symmetric i.e. all scores within 0 ± max_x_displacement
+        max_x_displacement: int,
+        # This should be symmetric i.e. all scores within 0 ± max_y_displacement
+        max_y_displacement: int,
+        colour: typing.Union[discord.Colour, int] = MAGIC_EMBED_COLOUR,
+    ):
+        self.title: str = title
+        self.questions: typing.List[AlignmentQuestion] = questions
+        self.alignment_table = alignment_table
+        self.x = max_x_displacement
+        self.y = max_y_displacement
+        self.colour = colour
+
+    def add_questions(self, *questions: AlignmentQuestion):
+        """Used to add additional questions after an AlignmentTest has been created"""
+        self.questions.extend(questions)
+
+    async def do_test(self, ctx: commands.Context):
+        """Run an alignment test, including all Discord interaction"""
+        # as we're not mutating the objects, there's no need for a deepcopy.
+        # we *are* shuffling, though, hence the shallow copy.
+        # we could, in theory, omit the copy and just shuffle it;
+        # but that would cause problems if the same quiz is played under
+        # multiple instances. </p>
+        quiz_questions: typing.List[AlignmentQuestion] = self.questions.copy()
+
+        # shuffle it the mathematically best number of times
+        for _ in range(7):
+            shuffle(quiz_questions)
+
+        # set data for this run
+        x = y = 0
+        max_question = len(quiz_questions)
+        # initialise the message
+        msg: discord.Message = await ctx.send("Loading alignment test...")
+        # add option reactions
+        for emoji in OPTION_EMOJI:
+            await msg.add_reaction(emoji)
+        # add cancel reaction
+        await msg.add_reaction(CANCEL_QUIZ)
+
+        # get check now to avoid redefining each loop
+        check = get_check(ctx, msg)
+
+        # main quiz loop
+        for number, question in enumerate(quiz_questions, 1):
+            # retrieve the question data
+            embed, answer_key = await question.prepare_question_with_embed(self.colour)
+
+            # ask the question
+            await msg.edit(
+                content=f"[{self.title}] Question {number} of {max_question}",
+                embed=embed,
+            )
+
+            # wait for user response
+            reaction, _ = await ctx.bot.wait_for("reaction_add", check=check)
+
+            # if the user cancels
+            if reaction.emoji == CANCEL_QUIZ:
+                await msg.edit(embed=alignment_cancelled_embed(colour=self.colour))
+                return
+
+            # get the chosen answer in [field, increment] form
+            # some increments will be negative, indicated a downward shift
+            # in that alignment
+            answer = answer_key[EMOJI_TO_INT[reaction.emoji]]
+            if answer[0] == AlignmentField.X:
+                x += answer[1]
+            elif answer[0] == AlignmentField.Y:
+                y += answer[1]
+
+        # at the end of the quiz
+        alignment = self.alignment_table[floor(value_map(y, -self.y, self.y, -1, 2))][
+            floor(value_map(x, -self.x, self.x, -1, 2))
+        ]
+        await msg.edit(
+            content=f"Alignment for {ctx.author.nick or ctx.author.name}: {alignment}",
+            embed=get_alignment_embed(colour=self.colour),
         )
