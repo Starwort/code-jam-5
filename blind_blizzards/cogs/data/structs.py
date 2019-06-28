@@ -5,6 +5,9 @@ import discord
 import enum
 from math import floor
 
+# team logo
+EMBED_THUMBNAIL = "https://i.imgur.com/xaqlfLO.png"
+
 
 class AlignmentField(enum.Enum):
     # for standard alignment, X = lawful/chaotic
@@ -57,37 +60,45 @@ CANCEL_QUIZ = "❌"
 def get_cancelled_embed(
     colour: typing.Union[discord.Colour, int] = MAGIC_EMBED_COLOUR
 ) -> discord.Embed:
-    return discord.Embed(
+    embed = discord.Embed(
         colour=colour,
         title="Cancelled Quiz",
         description=f"Ended the quiz prematurely.",
     )
+    embed.set_thumbnail(url=EMBED_THUMBNAIL)
+    return embed
 
 
 def alignment_cancelled_embed(
     colour: typing.Union[discord.Colour, int] = MAGIC_EMBED_COLOUR
 ) -> discord.Embed:
-    return discord.Embed(
+    embed = discord.Embed(
         colour=colour,
         title="Cancelled Alignment Test",
         description=f"Ended the test prematurely.\n*You'll never know...*",
     )
+    embed.set_thumbnail(url=EMBED_THUMBNAIL)
+    return embed
 
 
 def get_finished_embed(
     colour: typing.Union[discord.Colour, int] = MAGIC_EMBED_COLOUR
 ) -> discord.Embed:
-    return discord.Embed(
+    embed = discord.Embed(
         colour=colour, title="Finished Quiz", description=f"The quiz is over."
     )
+    embed.set_thumbnail(url=EMBED_THUMBNAIL)
+    return embed
 
 
 def get_alignment_embed(
     colour: typing.Union[discord.Colour, int] = MAGIC_EMBED_COLOUR
 ) -> discord.Embed:
-    return discord.Embed(
+    embed = discord.Embed(
         colour=colour, title="Finished Alignment Test", description=f"The test is over."
     )
+    embed.set_thumbnail(url=EMBED_THUMBNAIL)
+    return embed
 
 
 def get_check(
@@ -154,6 +165,7 @@ class QuizQuestion:
             title=f"{quiz_name} - question {question} of {max_question}",
             description=text,
         )
+        embed.set_thumbnail(url=EMBED_THUMBNAIL)
 
         # for each option, add a field
         for emoji, option in zip(OPTION_EMOJI, options):
@@ -298,6 +310,7 @@ class AlignmentQuestion:
 
         # make a basic embed, honouring the customisation settings
         embed = discord.Embed(colour=colour, description=text)
+        embed.set_thumbnail(url=EMBED_THUMBNAIL)
 
         # for each option, add a field
         for emoji, option in zip(OPTION_EMOJI, options):
@@ -410,5 +423,6 @@ class AlignmentTest:
             )
         else:
             embed = discord.Embed(colour=self.colour)
+            embed.set_thumbnail(url=EMBED_THUMBNAIL)
             embed.set_image(url=alignment)
             await msg.edit(content=f"Alignment for {user}:", embed=embed)
