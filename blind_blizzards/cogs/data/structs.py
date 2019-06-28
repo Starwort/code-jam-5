@@ -46,10 +46,7 @@ class QuizQuestion:
     """Structure used for holding multiple-choice quiz questions"""
 
     def __init__(
-        self,
-        question_text: str,
-        options: typing.List[str],
-        correct_option_index: int
+        self, question_text: str, options: typing.List[str], correct_option_index: int
     ):
         self.text: str = question_text
         self.options: typing.List[str] = options
