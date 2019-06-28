@@ -1,4 +1,4 @@
-from structs import Quiz, QuizQuestion
+from .structs import Quiz, QuizQuestion
 
 
 quizzes = []
@@ -45,4 +45,4 @@ example_quiz.add_questions(
 
 # if we wanted this to be a real quiz
 # we'd uncomment this line:
-# quizzes.append(example_quiz)
+quizzes.append(example_quiz)
