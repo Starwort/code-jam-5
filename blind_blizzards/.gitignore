@@ -23,7 +23,7 @@ var/
 .installed.cfg
 *.egg
 
-#V isual Studio Code
+# Visual Studio Code
 .vscode
 
 # Our configuration files
