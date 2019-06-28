@@ -159,7 +159,7 @@ class Quiz:
 
             # ask the question
             await msg.edit(
-                text=f"{ctx.author.nick or ctx.author.name}'s score: {score}",
+                content=f"{ctx.author.nick or ctx.author.name}'s score: {score}",
                 embed=embed,
             )
 
@@ -177,6 +177,6 @@ class Quiz:
 
         # at the end of the quiz
         await msg.edit(
-            text=f"Final score for {ctx.author.nick or ctx.author.name}: {score}",
+            content=f"Final score for {ctx.author.nick or ctx.author.name}: {score}",
             embed=get_finished_embed(colour=self.colour),
         )
