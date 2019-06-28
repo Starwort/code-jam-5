@@ -26,7 +26,7 @@ class Quizzes(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         # a list of quiz titles to their quizzes
-        self.quizzes_by_name = {quiz.title for quiz in quizzes.quizzes}
+        self.quizzes_by_name = {quiz.title: quiz for quiz in quizzes.quizzes}
 
     @commands.command()
     @_check()
@@ -35,7 +35,7 @@ class Quizzes(commands.Cog):
         # reload cogs.data.quizzes
         reload(quizzes)
         # construct quizzes_by_name again
-        self.quizzes_by_name = {quiz.title for quiz in quizzes.quizzes}
+        self.quizzes_by_name = {quiz.title: quiz for quiz in quizzes.quizzes}
         # send back a nice little message
         await ctx.send(f"Reloaded {len(self.quizzes_by_name)} quizzes")
 
