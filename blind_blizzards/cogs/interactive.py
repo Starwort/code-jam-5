@@ -5,7 +5,7 @@ from discord.ext import commands
 import discord
 
 # quiz data
-from .data import interactive
+from data import interactive
 
 # reload quiz data
 from importlib import reload
