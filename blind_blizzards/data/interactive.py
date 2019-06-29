@@ -56,9 +56,11 @@ example_test = AlignmentTest(
     "Example Alignment Test",
     [],
     [
-        ["Top left", "Top middle", "Top right"],
-        ["Middle left", "Middle middle", "Middle right"],
-        ["Bottom left", "Bottom middle", "Bottom right"],
+        #                 +X
+        # ----------------------------------> #
+        ["Top left", "Top middle", "Top right"],  #          |
+        ["Middle left", "Middle middle", "Middle right"],  # | +Y
+        ["Bottom left", "Bottom middle", "Bottom right"],  # V
     ],
     24,
     24,
