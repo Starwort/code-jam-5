@@ -25,4 +25,4 @@ class AlignmentField(enum.Enum):
 OPTION_EMOJI = ["🇦", "🇧", "🇨", "🇩", "🇪"]
 EMOJI_TO_INT = {emoji: index for index, emoji in enumerate(OPTION_EMOJI)}
 # 5 options
-CANCEL_QUIZ = "❌"
+CANCEL = "❌"

@@ -9,62 +9,67 @@ from .consts import (
     AlignmentField,
     OPTION_EMOJI,
     EMOJI_TO_INT,
-    CANCEL_QUIZ,
+    CANCEL,
 )
 from lib.utils import value_map
+from .typing import Colour, Emoji
 
 
-def get_cancelled_embed(
-    colour: typing.Union[discord.Colour, int] = MAGIC_EMBED_COLOUR
-) -> discord.Embed:
+def get_cancelled_embed(colour: Colour = MAGIC_EMBED_COLOUR) -> discord.Embed:
     embed = discord.Embed(
-        colour=colour,
-        title="Cancelled Quiz",
-        description=f"Ended the quiz prematurely.",
+        colour=colour, title="Cancelled Quiz", description="Ended the quiz prematurely."
     )
     embed.set_thumbnail(url=EMBED_THUMBNAIL)
     return embed
 
 
-def alignment_cancelled_embed(
-    colour: typing.Union[discord.Colour, int] = MAGIC_EMBED_COLOUR
-) -> discord.Embed:
+def alignment_cancelled_embed(colour: Colour = MAGIC_EMBED_COLOUR) -> discord.Embed:
     embed = discord.Embed(
         colour=colour,
         title="Cancelled Alignment Test",
-        description=f"Ended the test prematurely.\n*You'll never know...*",
+        description="Ended the test prematurely.\n*You'll never know...*",
     )
     embed.set_thumbnail(url=EMBED_THUMBNAIL)
     return embed
 
 
-def get_finished_embed(
-    colour: typing.Union[discord.Colour, int] = MAGIC_EMBED_COLOUR
-) -> discord.Embed:
+def game_cancelled_embed(colour: Colour = MAGIC_EMBED_COLOUR) -> discord.Embed:
     embed = discord.Embed(
-        colour=colour, title="Finished Quiz", description=f"The quiz is over."
+        colour=colour,
+        title="Ended Game",
+        description="You quit before the end; the Earth is still in perilous waters.",
     )
     embed.set_thumbnail(url=EMBED_THUMBNAIL)
     return embed
 
 
-def get_alignment_embed(
-    colour: typing.Union[discord.Colour, int] = MAGIC_EMBED_COLOUR
-) -> discord.Embed:
+def get_finished_embed(colour: Colour = MAGIC_EMBED_COLOUR) -> discord.Embed:
     embed = discord.Embed(
-        colour=colour, title="Finished Alignment Test", description=f"The test is over."
+        colour=colour, title="Finished Quiz", description="The quiz is over."
+    )
+    embed.set_thumbnail(url=EMBED_THUMBNAIL)
+    return embed
+
+
+def get_alignment_embed(colour: Colour = MAGIC_EMBED_COLOUR) -> discord.Embed:
+    embed = discord.Embed(
+        colour=colour, title="Finished Alignment Test", description="The test is over."
     )
     embed.set_thumbnail(url=EMBED_THUMBNAIL)
     return embed
 
 
 def get_check(
-    ctx: commands.Context, msg: discord.Message
+    ctx: commands.Context,
+    msg: discord.Message,
+    allowed_emoji: typing.List[Emoji] = None,
 ) -> typing.Callable[[discord.Reaction, discord.User], bool]:
     """Generates the check for an option reaction on a message."""
+    if allowed_emoji is None:
+        allowed_emoji = OPTION_EMOJI + [CANCEL]
 
     def check(reaction: discord.Reaction, user: discord.User):
-        valid_emoji = reaction.emoji in OPTION_EMOJI + [CANCEL_QUIZ]
+        valid_emoji = reaction.emoji in allowed_emoji
         valid_user = user == ctx.author
         # for some reason these aren't equating properly
         valid_message = reaction.message.id == msg.id
@@ -92,15 +97,19 @@ class QuizQuestion:
         """Called when generating a question during a quiz"""
         # copy self.options and add index items
         options = [[index, item] for index, item in enumerate(self.options)]
+
         # shuffle it the mathematically best number of times
         for _ in range(7):
             shuffle(options)
+
         # figure out which item is correct now
         correct = [
             index for index, item in enumerate(options) if item[0] == self.correct
         ][0]
+
         # strip the indexes from the options
         options = [item for index, item in options]
+
         # return the question, shuffled options, and correct answer
         return self.text, options, correct
 
@@ -109,7 +118,7 @@ class QuizQuestion:
         quiz_name: str,
         question: int,
         max_question: int,
-        colour: typing.Union[discord.Colour, int] = MAGIC_EMBED_COLOUR,
+        colour: Colour = MAGIC_EMBED_COLOUR,
     ) -> typing.Tuple[discord.Embed, int]:
         """Called immediately before display during a quiz, for formatting.
         Quizzes can customise the colour of the embed using the `colour` parameter"""
@@ -130,7 +139,7 @@ class QuizQuestion:
 
         # tell the user what's going on
         embed.set_footer(
-            text=f"React with your choice to answer, or with {CANCEL_QUIZ} to end:"
+            text=f"React with your choice to answer, or with {CANCEL} to end:"
         )
 
         # return the embed and correct answer
@@ -144,7 +153,7 @@ class Quiz:
         self,
         title: str,
         questions: typing.List[QuizQuestion],
-        colour: typing.Union[discord.Colour, int] = MAGIC_EMBED_COLOUR,
+        colour: Colour = MAGIC_EMBED_COLOUR,
     ):
         self.title: str = title
         self.questions: typing.List[QuizQuestion] = questions
@@ -176,7 +185,7 @@ class Quiz:
         for emoji in OPTION_EMOJI:
             await msg.add_reaction(emoji)
         # add cancel reaction
-        await msg.add_reaction(CANCEL_QUIZ)
+        await msg.add_reaction(CANCEL)
 
         # get check now to avoid redefining each loop
         check = get_check(ctx, msg)
@@ -198,7 +207,7 @@ class Quiz:
             reaction, _ = await ctx.bot.wait_for("reaction_add", check=check)
 
             # if the user cancels
-            if reaction.emoji == CANCEL_QUIZ:
+            if reaction.emoji == CANCEL:
                 await msg.edit(embed=get_cancelled_embed(colour=self.colour))
                 return
 
@@ -258,7 +267,7 @@ class AlignmentQuestion:
         return self.text, options
 
     async def prepare_question_with_embed(
-        self, colour: typing.Union[discord.Colour, int] = MAGIC_EMBED_COLOUR
+        self, colour: Colour = MAGIC_EMBED_COLOUR
     ) -> typing.Tuple[discord.Embed, int]:
         """Called immediately before display during a quiz, for formatting.
         Quizzes can customise the colour of the embed using the `colour` parameter"""
@@ -275,7 +284,7 @@ class AlignmentQuestion:
 
         # tell the user what's going on
         embed.set_footer(
-            text=f"React with your choice to answer, or with {CANCEL_QUIZ} to end:"
+            text=f"React with your choice to answer, or with {CANCEL} to end:"
         )
 
         # return the embed and alignment data
@@ -298,7 +307,7 @@ class AlignmentTest:
         max_x_displacement: int,
         # This should be symmetric i.e. all scores within 0 ± max_y_displacement
         max_y_displacement: int,
-        colour: typing.Union[discord.Colour, int] = MAGIC_EMBED_COLOUR,
+        colour: Colour = MAGIC_EMBED_COLOUR,
         as_images: bool = False,
     ):
         self.title: str = title
@@ -335,7 +344,7 @@ class AlignmentTest:
         for emoji in OPTION_EMOJI:
             await msg.add_reaction(emoji)
         # add cancel reaction
-        await msg.add_reaction(CANCEL_QUIZ)
+        await msg.add_reaction(CANCEL)
 
         # get check now to avoid redefining each loop
         check = get_check(ctx, msg)
@@ -355,7 +364,7 @@ class AlignmentTest:
             reaction, _ = await ctx.bot.wait_for("reaction_add", check=check)
 
             # if the user cancels
-            if reaction.emoji == CANCEL_QUIZ:
+            if reaction.emoji == CANCEL:
                 await msg.edit(embed=alignment_cancelled_embed(colour=self.colour))
                 return
 
@@ -383,3 +392,83 @@ class AlignmentTest:
             embed.set_thumbnail(url=EMBED_THUMBNAIL)
             embed.set_image(url=alignment)
             await msg.edit(content=f"Alignment for {user}:", embed=embed)
+
+
+class GameNode:
+    def __init__(
+        self,
+        short_text: str,
+        long_text: str,
+        children: typing.List[GameNode],
+        message: discord.Message,
+        colour: Colour = MAGIC_EMBED_COLOUR,
+    ):
+        self.as_option = short_text
+        self.text = long_text
+        self.children = children
+        self.message = message
+        self.colour = colour
+
+    def to_embed(self, shuffled_children):
+        """Returns the embed for this node"""
+        # make the embed object
+        embed = discord.Embed(colour=self.colour, description=self.text)
+
+        # add fields for each child
+        for emoji, child in zip(OPTION_EMOJI, shuffled_children):
+            embed.add_field(name=emoji, value=child.as_option)
+
+        # set standard embed data - thumbnail and footer
+        embed.set_thumbnail(url=EMBED_THUMBNAIL)
+        embed.set_footer(text=f"Select your choice below, or quit with {CANCEL}:")
+
+        # send back the embed
+        return embed
+
+    async def get_next_node(self):
+        """Performs the Discord logic of retrieving the next node"""
+        # generate the check for the node's response
+
+        # the little zip hack shortens the list of emoji so that it is the same
+        # length as our list of children
+        # N.B. there might be a better way of doing this
+        check = get_check(
+            self.ctx,
+            self.message,
+            [emoji for emoji, child in zip(OPTION_EMOJI, self.children)] + [CANCEL],
+        )
+
+        # copy our children
+        shuffled_children = self.children.copy()
+
+        # shuffle them the mathematically best number of times
+        for _ in range(7):
+            shuffle(shuffled_children)
+
+        # edit the message with our embed
+        await self.message.edit(embed=self.to_embed(shuffled_children))
+
+        # wait for user response
+        reaction, _ = await self.ctx.bot.wait_for("reaction_add", check=check)
+
+        # if the user cancels
+        if reaction.emoji == CANCEL:
+            await self.message.edit(embed=game_cancelled_embed(colour=self.colour))
+            # tell the node we don't want to continue
+            return -1
+
+        # tell the node which option we picked
+        return EMOJI_TO_INT[reaction.emoji]
+
+    async def run_this_node(self, ctx: commands.Context = None, is_first: bool = False):
+        """Run the node, playing the rest of the game"""
+        # initialise self.ctx from ctx
+        self.ctx = ctx
+
+        # if this is the first node, initialise the discord data:
+        if is_first:
+            # send our message, with dummy text for now
+            self.message = await ctx.send("Loading game...")
+            for emoji in OPTION_EMOJI + [CANCEL]:
+                await self.message.add_reaction(emoji)
+        ...

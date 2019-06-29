@@ -4,6 +4,9 @@ from discord.ext import commands
 
 # general type
 Number = typing.Union[int, float]
+Colour = typing.Union[discord.Colour, int]
+Emoji = typing.Union[discord.Emoji, str]
+Account = typing.Union[discord.User, discord.Member]
 
 # cogs.help.cog
 MaybeCog = typing.Optional[commands.Cog]
