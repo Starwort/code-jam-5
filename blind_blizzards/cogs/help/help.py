@@ -5,16 +5,17 @@ from discord.ext import commands
 import config
 
 from .paginator import BotOrCogHelp, GroupHelp, CommandHelp
+from data.typing import CommandsByCog
 
 
 per_page = getattr(config, "COMMANDS_PER_HELP_PAGE", 10)
 
 
-class HelpCommand(commands.HelpCommand):
-    """The customized help command"""
+class CustomHelpCommand(commands.HelpCommand):
+    """The customised help command"""
 
     def __init__(self):
-        super().__init__(command_attrs={"help": "help.help.help_help"})
+        super().__init__()
 
     async def send_command_help(self, command: commands.Command):
         """The coroutine to run when requested help for a single command.
@@ -94,12 +95,7 @@ class HelpCommand(commands.HelpCommand):
 
         await paginator.paginate()
 
-    async def send_bot_help(
-        self,
-        mapping: typing.Mapping[
-            typing.Optional[commands.Cog], typing.List[commands.Command]
-        ],
-    ):
+    async def send_bot_help(self, mapping: CommandsByCog):
         """The coroutine to run when requested generic helo for the entire bot
 
         Parameters

@@ -2,15 +2,7 @@ import asyncio
 import discord
 import typing
 from discord.ext import commands
-
-PagesTyping = typing.List[
-    typing.List[
-        typing.Tuple[
-            typing.Union[commands.Cog, commands.Group, None],
-            typing.List[commands.Command],
-        ]
-    ]
-]
+from data.typing import PagesTyping
 
 
 class HelpPaginator:
@@ -100,7 +92,9 @@ class HelpPaginator:
         self.match: typing.Optional[typing.Callable]
         self.help_message: typing.Optional[discord.Message] = None
 
-    def predicate(self, reaction: discord.Reaction, user: discord.BaseUser):
+    def predicate(
+        self, reaction: discord.Reaction, user: discord.BaseUser
+    ) -> typing.Union[bool, None]:
         """The check for a reaction_add"""
 
         if user.id != self.author.id:
@@ -116,7 +110,7 @@ class HelpPaginator:
         return False
 
     async def prepare_embed(self, page: int) -> typing.NoReturn:
-        """The function called to prepare the embed before it is send/edited.
+        """The function called to prepare the embed before it is sent/edited.
 
         This is overwritten when subclassed.
 
@@ -159,17 +153,17 @@ class HelpPaginator:
                 continue
             await self.help_message.add_reaction(reaction)
 
-    async def first_page(self):
+    async def first_page(self) -> None:
         """When the Double Left Triangle is clicked."""
 
         await self.show(0)
 
-    async def last_page(self):
+    async def last_page(self) -> None:
         """When the Double Right Triangle is clicked."""
 
         await self.show(self.maximum_pages - 1)
 
-    async def next_page(self):
+    async def next_page(self) -> None:
         """WHen the Single Right Triangle is clicked."""
 
         new = self.current_page + 1
@@ -177,7 +171,7 @@ class HelpPaginator:
         if new < self.maximum_pages:
             await self.show(new)
 
-    async def previous_page(self):
+    async def previous_page(self) -> None:
         """When the Single Left Triangle is clicked."""
 
         new = self.current_page - 1
@@ -185,11 +179,11 @@ class HelpPaginator:
         if new < self.maximum_pages:
             await self.show(new)
 
-    async def stop_pages(self):
+    async def stop_pages(self) -> None:
         """When the Stop button is clicked."""
 
         await self.help_message.edit(
-            content=await self.translate("help.quit"), embed=None
+            content="Quit help menu.", embed=None
         )  # remove embed after pagination
         try:
             await self.help_message.clear_reactions()
@@ -201,7 +195,9 @@ class HelpPaginator:
     async def paginate(self) -> None:
         """The commnand to esentially start the paginator."""
 
-        first_page = self.show(0, first=True)
+        first_page = self.show(0, first=True)  # pylint: disable=assignment-from-none
+        # N.B. that this line stores a coro. Pylint doesn't like this because it
+        # has a null return
         if not self.paginating:
             await first_page
             return
@@ -225,7 +221,7 @@ class HelpPaginator:
                     break
 
             try:
-                await self.message.remove_reaction(reaction, user)
+                await self.help_message.remove_reaction(reaction, user)
             except discord.DiscordException:
                 # leave it if we can't remove it
                 pass
