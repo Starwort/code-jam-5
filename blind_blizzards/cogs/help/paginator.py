@@ -16,12 +16,12 @@ class HelpPaginator:
         The discord bot currently running
     ctx: discord.ext.commands.Context
         The current context of the Discord message
-    pages: PagesTyping (see above)
+    pages: PagesTyping (see data.typing)
         The pages to add to the paginator
 
     Attributes
     ----------
-    author: discord.BaseUser
+    author: discord.User
         A shortcut for `self.context.author` - The invoker of the help command
     channel: typing.Union[discord.TextChannel, discord.DMChannel]
         A shortcut for `self.context.channel` - The channel in which the command was invoked
@@ -57,7 +57,7 @@ class HelpPaginator:
         self.help_command: commands.HelpCommand = help_command
         self.bot: commands.Bot = bot
         self.context: commands.Context = ctx
-        self.author: discord.BaseUser = ctx.author
+        self.author: discord.User = ctx.author
         self.channel: typing.Union[discord.TextChannel, discord.DMChannel] = ctx.channel
         self.original_message: discord.Message = ctx.message
 
@@ -93,7 +93,7 @@ class HelpPaginator:
         self.help_message: typing.Optional[discord.Message] = None
 
     def predicate(
-        self, reaction: discord.Reaction, user: discord.BaseUser
+        self, reaction: discord.Reaction, user: discord.User
     ) -> typing.Union[bool, None]:
         """The check for a reaction_add"""
 
