@@ -469,6 +469,23 @@ class GameNode:
         if is_first:
             # send our message, with dummy text for now
             self.message = await ctx.send("Loading game...")
+
+            # add our reactions
             for emoji in OPTION_EMOJI + [CANCEL]:
                 await self.message.add_reaction(emoji)
-        ...
+
+            # we've finished setup (reacting takes a while), so
+            # clear the dummy text with a zero width space
+            await self.message.edit(content="\u200b")
+
+        # get the next node
+        next_node = await self.get_next_node()
+
+        # user cancelled
+        if next_node == -1:
+            return
+
+        # get next node
+        child = self.children[next_node]
+        # run it
+        await child.run_this_node(ctx)
