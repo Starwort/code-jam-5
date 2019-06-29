@@ -400,13 +400,11 @@ class GameNode:
         short_text: str,
         long_text: str,
         children: typing.List[GameNode],
-        message: discord.Message,
         colour: Colour = MAGIC_EMBED_COLOUR,
     ):
         self.as_option = short_text
         self.text = long_text
         self.children = children
-        self.message = message
         self.colour = colour
 
     def to_embed(self, shuffled_children):
@@ -460,10 +458,17 @@ class GameNode:
         # tell the node which option we picked
         return EMOJI_TO_INT[reaction.emoji]
 
-    async def run_this_node(self, ctx: commands.Context = None, is_first: bool = False):
+    async def run_this_node(
+        self,
+        ctx: commands.Context = None,
+        message: discord.Message = None,
+        is_first: bool = False,
+    ):
         """Run the node, playing the rest of the game"""
-        # initialise self.ctx from ctx
+        # initialise self.ctx from ctx and self.message from message
+        # N.B. if this node is first then message is None
         self.ctx = ctx
+        self.message = message
 
         # if this is the first node, initialise the discord data:
         if is_first:
@@ -488,4 +493,39 @@ class GameNode:
         # get next node
         child = self.children[next_node]
         # run it
-        await child.run_this_node(ctx)
+        await child.run_this_node(ctx, message)
+
+
+class EndNode(GameNode):
+    def __init__(
+        self,
+        short_text: str,
+        long_text: str,
+        children: typing.List[GameNode],
+        colour: Colour = MAGIC_EMBED_COLOUR,
+        long_text_is_image: bool = False,
+    ):
+        self.as_option = short_text
+        self.text = long_text
+        self.is_image = long_text_is_image
+        self.children = children
+        self.colour = colour
+
+    async def run_this_node(self, ctx: commands.Context, message: discord.Message):
+        """As this is the last node, all that is left is to show the embed."""
+        # generate embed
+        if not self.is_image:
+            # it's not an image, generate in one statement
+            embed = discord.Embed(
+                colour=self.colour, description=self.text, title="The game is now over"
+            )
+        else:
+            # it's an image, need two statements
+            embed = discord.Embed(colour=self.colour, title="The game is now over")
+            embed.set_image(url=self.text)
+
+        # set standard embed data - thumbnail
+        embed.set_thumbnail(url=EMBED_THUMBNAIL)
+
+        # edit onto the message
+        await message.edit(embed=embed)
